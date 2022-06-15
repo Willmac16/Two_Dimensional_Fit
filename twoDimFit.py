@@ -1,7 +1,5 @@
 import numpy as np
 
-import sys
-
 
 # simple rref algorithm
 def rref(m):
@@ -52,9 +50,13 @@ def solve(A, Y):
 def twoDpolyEval(coeffs, x, y):
 	z = 0
 
-	for r, row in enumerate(coeffs):
-		for c, coeff in enumerate(row):
-			z += coeff * x**r * y**c
+	xPow = 1
+	for row in coeffs:
+		yPow = 1
+		for coeff in row:
+			z += coeff * xPow * yPow
+			yPow *= y
+		xPow *= x
 
 	return z
 
