@@ -59,6 +59,13 @@ def twoDpolyEval(coeffs, x, y):
 		xPow *= x
 
 	return z
+def sigma(ps, cs, zDeg=0):
+	sum = 0
+	for point in ps:
+		for pos, coord in zip(point[:-1], cs):
+			sum += pos**coord
+		sum += point[-1]**zDeg
+	return sum
 
 def sigma(ps, xDeg, yDeg, zDeg=0):
 	sum = 0
@@ -90,3 +97,62 @@ def twoDpolyFit(ps, xDeg, yDeg):
 	cS = solve(A, Z)
 	coeffs = cS.reshape((xDeg+1),(yDeg+1))
 	return coeffs
+
+def nDpolyFit(ps, *degs):
+	ps = np.array(ps, dtype="float")
+	degComb = 1
+	for deg in degs:
+		degComb *= deg + 1
+
+	A = np.zeros((degComb, degComb))
+
+	for r in range(degComb):
+		num = r
+		coords = np.zeros(len(degs))
+		degSoFar = 1
+		for ind in range(len(degs)-1, -1, -1):
+			deg = degs[ind]
+			coords[ind] += (num // degSoFar) % (deg+1)
+			
+			degSoFar *= (deg+1)
+
+  
+		for c in range(degComb):
+			num = c
+			degSoFar = 1
+			cs = coords.copy()
+			for ind in range(len(degs)-1, -1, -1):
+				deg = degs[ind]
+				cs[ind] += (num // degSoFar) % (deg+1)
+				
+				degSoFar *= (deg+1)
+
+
+			A[r, c] = sigma(ps, cs)
+
+	Z = np.zeros(degComb)
+ 
+	for t in range(degComb):
+		num = t
+		coords = np.zeros(len(degs))
+		degSoFar = 1
+		for ind in range(len(degs)-1, -1, -1):
+			deg = degs[ind]
+			coords[ind] += (num // degSoFar) % (deg+1)
+			
+			degSoFar *= (deg+1)
+
+		Z[t] = sigma(ps, coords, zDeg=1)
+  
+	cS = solve(A, Z)
+	outShape = np.array(degs) + 1
+	coeffs = cS.reshape(outShape)
+	return coeffs
+	
+			
+		
+
+def nDpolyEval(coeffs, *pos):
+	z = 0
+
+	return z
