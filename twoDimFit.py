@@ -56,13 +56,13 @@ def sigma(ps, cs, zDeg=0):
 		sum += s * point[-1]**zDeg
 	return sum
 
-def legacy_sigma(ps, xDeg, yDeg, zDeg=0):
+def legacy_sigma(ps, xDeg: int, yDeg: int, zDeg=0):
 	sum = 0
 	for x, y, z in ps:
 		sum += (x**xDeg)*(y**yDeg)*(z**zDeg)
 	return sum
 
-def twoDpolyFit(ps, xDeg, yDeg):
+def twoDpolyFit(ps, xDeg: int, yDeg: int):
 	A = np.zeros(((xDeg+1)*(yDeg+1), (xDeg+1)*(yDeg+1)))
 	ps = np.array(ps, dtype="float")
 
@@ -87,7 +87,7 @@ def twoDpolyFit(ps, xDeg, yDeg):
 	coeffs = cS.reshape((xDeg+1),(yDeg+1))
 	return coeffs
 
-def nDpolyFit(ps, *degs):
+def nDpolyFit(ps, *degs: int):
 	ps = np.array(ps, dtype="float")
 	degComb = 1
 	for deg in degs:
@@ -147,7 +147,7 @@ def twoDpolyEval(coeffs, x, y):
 
 	return z
 
-def nDpolyEval(coeffs, *pos):
+def nDpolyEval(coeffs: np.ndarray, *pos: float):
 	z = 0
 	pos = np.array(pos)
 
