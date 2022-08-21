@@ -170,6 +170,13 @@ def nDpolyEval(coeffs: np.ndarray, *pos: float):
 
     return z
 
+def oneDderivative(coeffs: np.ndarray):
+    output_coeffs = np.zeros(len(coeffs) - 1)
+
+    for ind, coeff in enumerate(coeffs[1:]):
+        output_coeffs[ind-1] = ind * coeff
+
+    return output_coeffs
 
 # Wrapper for polyeval that handles a 1D piecewise function if splits are given
 class PiecewisePolyfit:
