@@ -191,21 +191,18 @@ class PiecewisePolyfit:
         arrays = []
 
         self.coeffs = []
+        self.split_points = []
 
         splits.sort()
 
         import matplotlib.pyplot as plt
 
         for split in splits:
-            while func[ind][0] < split:
-                ind += 1
-            arrays.append(func[last_ind:ind])
+            self.split_points.append(func[split - 1][0])
 
-            if func[ind][0] == split:
-                last_ind = ind
-            else:
-                last_ind = ind + 1
+            arrays.append(func[last_ind:split])
 
+            last_ind = split
 
 
         for array in arrays:
@@ -217,10 +214,12 @@ class PiecewisePolyfit:
         # Find the segment the x value is in
         ind = 0
 
-        while ind < len(self.splits) and x > self.splits[ind]:
+        while ind + 1 < len(self.split_points) and x > self.split_points[ind]:
             ind += 1
 
         segment = ind
+
+        # print("seg {} num segs {}".format(segment, len(self.coeffs)))
 
         # Run polyeval
         y = nDpolyEval(self.coeffs[segment], np.array([x]))
