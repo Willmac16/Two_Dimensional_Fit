@@ -24,6 +24,21 @@ def rref(m):
 
     return matrix
 
+# invert a matrix with rref
+def invert(m):
+    shape = m.shape
+    if len(shape) != 2 or shape[0] != shape[1]:
+        raise ValueError("Matrix must be square")
+
+    matrix = np.copy(m)
+    matrix.append(np.zeros(shape), axis=1)
+
+    rrefed = rref(matrix)
+
+    out = rrefed[:, shape[1]].copy()
+    return out
+
+
 # linear system solution function (sets free variables to 0)
 def solve(A, Y):
     aug = np.append(A, Y.reshape((Y.shape[0], 1)), axis=1)
