@@ -30,12 +30,14 @@ def invert(m):
     if len(shape) != 2 or shape[0] != shape[1]:
         raise ValueError("Matrix must be square")
 
-    matrix = np.copy(m)
-    matrix.append(np.zeros(shape), axis=1)
+    aug = np.zeros((shape[0], 2*shape[1]))
 
-    rrefed = rref(matrix)
+    aug[:,:shape[1]] = m
+    aug[:,shape[1]:] = np.identity(shape[0])
 
-    out = rrefed[:, shape[1]].copy()
+    rrefed = rref(aug)
+
+    out = rrefed[:, shape[1]:].copy()
     return out
 
 
@@ -267,6 +269,13 @@ def test():
 
     plt.legend()
     plt.show()
+
+    print("Invert Test")
+
+    rot = np.array(((0, -1), (1, 0)))
+    print(rot)
+    print(invert(rot))
+    print(rot @ invert(rot))
 
 if __name__ == "__main__":
     test()
