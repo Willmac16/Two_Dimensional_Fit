@@ -202,6 +202,12 @@ class PiecewisePolyfit:
         func = np.column_stack((x, y))
         func.sort(axis=1)
 
+        # X needs to be monotonic
+        self.monotonic_positive = True
+
+        if x[-1] < x[0]:
+            self.monotonic_positive = False
+
         ind = 0
         last_ind = 0
         # Split the x and y arrays at the split points
@@ -231,8 +237,12 @@ class PiecewisePolyfit:
         # Find the segment the x value is in
         ind = 0
 
-        while ind + 1 < len(self.split_points) and x > self.split_points[ind]:
-            ind += 1
+        if self.monotonic_positive:
+            while ind + 1 < len(self.split_points) and x > self.split_points[ind]:
+                ind += 1
+        else:
+            while ind + 1 < len(self.split_points) and x < self.split_points[ind]:
+                ind += 1
 
         segment = ind
 
@@ -241,6 +251,7 @@ class PiecewisePolyfit:
         # Run polyeval
         y = nDpolyEval(self.coeffs[segment], np.array([x]))
         return y
+
 
 def test():
     print("Comparing 2D polynomial fitting to nD polynomial fitting")
