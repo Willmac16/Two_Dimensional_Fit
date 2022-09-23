@@ -195,6 +195,20 @@ def oneDderivative(coeffs: np.ndarray):
 
     return output_coeffs
 
+def binary_search(x, points, monotonic_positive):
+    ind_u = len(points) - 1
+    ind_l = 0
+
+    while ind_u != ind_l:
+        ind_n = (ind_u - ind_l) // 2
+
+        if (points[ind_u] - x) * (points[ind_l]) < 0:
+            ind_u = ind_n
+        else:
+            ind_l = ind_n
+
+    return ind_l
+
 # Wrapper for polyeval that handles a 1D piecewise function if splits are given
 class PiecewisePolyfit:
     def __init__(self, x, y, degree: int, splits):
@@ -218,7 +232,7 @@ class PiecewisePolyfit:
 
         splits.sort()
 
-        import matplotlib.pyplot as plt
+        # import matplotlib.pyplot as plt
 
         for split in splits:
             self.split_points.append(func[split - 1][0])
@@ -237,12 +251,15 @@ class PiecewisePolyfit:
         # Find the segment the x value is in
         ind = 0
 
+        bin_ind = binary_search(x, self.split_points, monotonic_positive=self.monotonic_positive)
         if self.monotonic_positive:
             while ind + 1 < len(self.split_points) and x > self.split_points[ind]:
                 ind += 1
         else:
             while ind + 1 < len(self.split_points) and x < self.split_points[ind]:
                 ind += 1
+
+        print("Binary Search Check: {}".format("passed" if bin_ind == ind else "failed"))
 
         segment = ind
 
