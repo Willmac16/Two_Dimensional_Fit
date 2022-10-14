@@ -20,7 +20,7 @@ def rref(m):
         if (lead):
             for ind in range(len(matrix)):
                 if ind != rc:
-                    matrix[ind] = matrix[ind] - (matrix[ind,rc]*matrix[rc])
+                    matrix[ind] -= (matrix[ind,rc]*matrix[rc])
 
     return matrix
 
@@ -271,39 +271,67 @@ class PiecewisePolyfit:
 
 
 def test():
+    import cppimport.import_hook
+    import cpp_tdf as cpp
+
+
+    print("RREF Check")
+
+    A = np.array([[2, 0, 2], [1, 2, 3], [1, 1, 1]])
+
+    cpp.print_array(A)
+
+    print(A)
+    print(rref(A))
+    print(cpp.rref(A))
+
     print("Comparing 2D polynomial fitting to nD polynomial fitting")
 
     ps = [[0, 0, 4], [1, 0, -1], [2, 0, 0], [0, 2, 0],  [0, 1, -1], [1, 1, 1], [1, 2, 3], [2, 1, 3], [2, 2, 4]]
 
     twoD = twoDpolyFit(ps, 2, 2)
     nD = nDpolyFit(ps, 2, 2)
+    cpp_twoD = cpp.twoDpolyFit(ps, 2, 2)
+
+    print("2D: {}".format(twoD))
+    print("nD: {}".format(nD))
+    print("cpp: {}".format(cpp_twoD))
+
+
     print("Coeffs Match:", np.allclose(twoD, nD))
+    print("Coeffs Match:", np.allclose(twoD, cpp_twoD))
 
-    fail = False
-    for x, y, z in ps:
-        fail = fail or twoDpolyEval(twoD, x, y) != nDpolyEval(nD, x, y)
 
-    print("Eval Match:", not fail)
+    # fail = False
+    # fail_two = False
+    # for x, y, z in ps:
+    #     fail = fail or twoDpolyEval(twoD, x, y) != nDpolyEval(nD, x, y)
+    #     # fail_two = fail_two or twoDpolyEval(twoD, x, y) != cpp.twoDpolyEval(cpp_twoD, x, y)
 
-    print("Testing 1d case")
-    ps = [[10, 10], [11, -50], [19, 55], [20, -5], [30, 0]]
-    oneD = nDpolyFit(ps, 4)
-    import matplotlib.pyplot as plt
 
-    xs = np.linspace(0, 30, 100)
+    # print("Eval Match:", not fail)
+    # # print("Eval Match:", not fail)
 
-    plt.plot([point[0] for point in ps], [point[1] for point in ps], label="Data")
-    plt.plot(xs, [nDpolyEval(oneD, x) for x in xs], label="Polynomial")
 
-    plt.legend()
-    plt.show()
+    # print("Testing 1d case")
+    # ps = [[10, 10], [11, -50], [19, 55], [20, -5], [30, 0]]
+    # oneD = nDpolyFit(ps, 4)
+    # import matplotlib.pyplot as plt
 
-    print("Invert Test")
+    # xs = np.linspace(0, 30, 100)
 
-    rot = np.array(((0, -1), (1, 0)))
-    print(rot)
-    print(invert(rot))
-    print(rot @ invert(rot))
+    # plt.plot([point[0] for point in ps], [point[1] for point in ps], label="Data")
+    # plt.plot(xs, [nDpolyEval(oneD, x) for x in xs], label="Polynomial")
+
+    # plt.legend()
+    # plt.show()
+
+    # print("Invert Test")
+
+    # rot = np.array(((0, -1), (1, 0)))
+    # print(rot)
+    # print(invert(rot))
+    # print(rot @ invert(rot))
 
 if __name__ == "__main__":
     test()
