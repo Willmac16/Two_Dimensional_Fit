@@ -158,7 +158,31 @@ double * solve(double *A, double *Z, int rows)
         aug[row*(rows+1) + rows] = Z[row];
     }
 
+    #ifdef DEBUG
+    for (int row = 0; row < rows; row++)
+    {
+        for (int col = 0; col < rows; col++)
+        {
+            std::cout << aug[col + row*(rows+1)] << " ";
+        }
+
+        std::cout << aug[row*(rows+1) + rows] << std::endl;
+    }
+    #endif
+
     rrefInPlace(aug, rows, rows+1);
+
+    #ifdef DEBUG
+    for (int row = 0; row < rows; row++)
+    {
+        for (int col = 0; col < rows; col++)
+        {
+            std::cout << aug[col + row*(rows+1)] << " ";
+        }
+
+        std::cout << aug[row*(rows+1) + rows] << std::endl;
+    }
+    #endif
 
     double *cs = new double[rows];
 
@@ -191,7 +215,7 @@ double sigma(py::array_t<double> points, int x_deg, int y_deg)
 
     double *ptr = (double *) buf.ptr;
 
-    for (int ind = 0; ind < num_points; ind++)
+    for (size_t ind = 0; ind < num_points; ind++)
     {
         sum += pow(ptr[ind * point_deg + 0], x_deg) * pow(ptr[ind * point_deg + 1], y_deg);
     }
@@ -215,10 +239,14 @@ double sigma(py::array_t<double> points, int x_deg, int y_deg, int z_deg)
 
     double *ptr = (double *) buf.ptr;
 
-    for (int ind = 0; ind < num_points; ind++)
+    for (size_t ind = 0; ind < num_points; ind++)
     {
         sum += pow(ptr[ind * point_deg + 0], x_deg) * pow(ptr[ind * point_deg + 1], y_deg) * pow(ptr[ind * point_deg + 2], z_deg);
     }
+
+    #ifdef DEBUG
+    std::cout << "(" << x_deg << "," << y_deg << "," << z_deg << ") = " << sum << std::endl;
+    #endif
 
     return sum;
 }
@@ -239,7 +267,7 @@ double sigma(py::array_t<double> points, int x_deg, int y_deg, int z_deg, int q_
 
     double *ptr = (double *) buf.ptr;
 
-    for (int ind = 0; ind < num_points; ind++)
+    for (size_t ind = 0; ind < num_points; ind++)
     {
         sum += pow(ptr[ind * point_deg + 0], x_deg) * pow(ptr[ind * point_deg + 1], y_deg) * pow(ptr[ind * point_deg + 2], z_deg) * pow(ptr[ind * point_deg + 3], q_deg);
     }
@@ -294,7 +322,6 @@ py::array_t<double> twoDimPolyFit(py::array_t<double> points, int x_degree, int 
     for (int i = 0; i < combs; i++)
     {
         coes[i] = cs[i];
-        std::cout << cs[i] << std::endl;
     }
 
     coeffs.resize({x_coeffs, y_coeffs});
@@ -317,9 +344,9 @@ void py_print_array(py::array_t<double> points)
 
     double *ptr = (double *) buf.ptr;
 
-    for (int ind = 0; ind < num_points; ind++)
+    for (size_t ind = 0; ind < num_points; ind++)
     {
-        for (int c = 0; c < point_deg; c++)
+        for (size_t c = 0; c < point_deg; c++)
         {
             std::cout << ptr[c + ind*point_deg] << ", ";
         }
@@ -331,7 +358,7 @@ void py_print_array(py::array_t<double> points)
 py::array_t<double> threeDimPolyFit(py::array_t<double> points, int x_degree, int y_degree, int z_degree)
 {
     int x_coeffs = x_degree + 1, y_coeffs = y_degree + 1, z_coeffs = z_degree + 1;
-    int combs = x_coeffs * y_coeffs * z_degree;
+    int combs = x_coeffs * y_coeffs * z_coeffs;
     double *A = new double[combs*combs];
 
     int x_row, x_col, y_row, y_col, z_row, z_col;
@@ -347,19 +374,20 @@ py::array_t<double> threeDimPolyFit(py::array_t<double> points, int x_degree, in
             y_col = c / z_coeffs % y_coeffs;
             z_col = c % z_coeffs;
 
-            A[c + r*combs] = sigma(points, x_row*x_col, y_row*y_col);
+            A[c + r*combs] = sigma(points, x_row+x_col, y_row+y_col, z_row+z_col);
         }
     }
 
     double *Z = new double[combs];
-    int x_tow, y_tow;
+    int x_tow, y_tow, z_tow;
 
     for (int t = 0; t < combs; t++)
     {
-        x_tow = t / y_coeffs;
-        y_tow = t % y_coeffs;
+        x_tow = t / y_coeffs / z_coeffs;
+        y_tow = t / z_coeffs % y_coeffs;
+        z_tow = t % z_coeffs;
 
-        Z[t] = sigma(points, x_tow, y_tow, 1);
+        Z[t] = sigma(points, x_tow, y_tow, z_tow, 1);
     }
 
     double *cs = solve(A, Z, combs);

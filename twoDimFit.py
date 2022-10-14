@@ -45,7 +45,9 @@ def invert(m):
 def solve(A, Y):
     aug = np.append(A, Y.reshape((Y.shape[0], 1)), axis=1)
 
+    # print(aug)
     clean = rref(aug)
+    # print(clean)
 
     coeffs = np.zeros(len(aug[0])-1)
 
@@ -300,6 +302,16 @@ def test():
 
     print("Coeffs Match:", np.allclose(twoD, nD))
     print("Coeffs Match:", np.allclose(twoD, cpp_twoD))
+
+
+    print("Comparing cpp 3D polynomial fitting to nD polynomial fitting")
+
+    ps_three = [[0, 0, 1, 4], [1, 0, 3, -1], [2, 0, 9, 0], [0, 2, 2, 0],  [0, 1, 7, -1], [1, 1, -2, 1], [1, 2, 9, 3], [2, 1, 11, 3], [2, 2, -3, 4]]
+
+    nD_three = nDpolyFit(ps_three, 2, 2, 2)
+    cpp_threeD = cpp.threeDpolyFit(ps_three, 2, 2, 2)
+
+    print("Coeffs Match:", np.allclose(nD_three, cpp_threeD))
 
 
     # fail = False
