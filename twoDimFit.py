@@ -156,12 +156,22 @@ def nDpolyFit(ps, *degs: int):
     coeffs = cS.reshape(outShape)
     return coeffs
 
-def twoDpolyEval(coeffs, x, y):
-    z = 0
+def oneDpolyEval(coeffs: np.ndarray, x: float):
+    y = 0.0
 
-    xPow = 1
+    xPow = 1.0
+    for coeff in coeffs:
+        y += coeff * xPow
+        xPow *= x
+
+    return y
+
+def twoDpolyEval(coeffs, x, y):
+    z = 0.0
+
+    xPow = 1.0
     for row in coeffs:
-        yPow = 1
+        yPow = 1.0
         for coeff in row:
             z += coeff * xPow * yPow
             yPow *= y
@@ -169,8 +179,25 @@ def twoDpolyEval(coeffs, x, y):
 
     return z
 
-def nDpolyEval(coeffs: np.ndarray, *pos: float):
-    z = 0
+def threeDpolyEval(coeffs: np.ndarray, x: float, y: float, z: float):
+    q = 0.0
+
+    xPow = 1.0
+    for row in coeffs:
+        yPow = 1.0
+        for col in row:
+            zPow = 1.0
+            for coeff in col:
+                q += coeff * xPow * yPow * zPow
+                zPow *= z
+            yPow *= y
+        xPow *= x
+
+    return q
+
+
+def nDpolyEval(coeffs: np.ndarray, *pos):
+    z = 0.0
     pos = np.array(pos)
 
     degComb = 1
@@ -188,6 +215,47 @@ def nDpolyEval(coeffs: np.ndarray, *pos: float):
         z += coeffs[tuple(coords.tolist())] * np.product(np.power(pos, coords))
 
     return z
+
+def nDpolyExtract(coeffs: np.ndarray, ind_to_extract: int, *pos):
+    # Go through and multiply all other axes by pos ** deg, then collapse down to vector
+
+    poly_vector = np.zeros(coeffs.shape[ind_to_extract])
+
+    pos = np.array(pos)
+
+    for deg in range(coeffs.shape[ind_to_extract]):
+        extracted_coeff = 0.0
+
+        # Slice the Tensor at the degree of our extraction variable
+        coeff_slice = coeffs
+        for axis in range(len(coeffs.shape)):
+            if axis == ind_to_extract:
+                coeff_slice = coeff_slice[deg]
+            else:
+                coeff_slice = coeff_slice[:]
+
+        # Iterate through the (maybe a) Matrix to compute the component of the vector
+        combs = 1
+        for ax in coeffs.shape:
+            combs *= ax
+        combs //= coeffs.shape[ind_to_extract]
+
+        for i in range(combs):
+            coords = np.zeros(len(coeffs.shape) - 1, dtype="int")
+            degSoFar = 1
+            for ind in range(len(coords)-1, -1, -1):
+                ord = coeff_slice.shape[ind]
+                coords[ind] += (i // degSoFar) % ord
+
+                degSoFar *= ord
+
+            extracted_coeff += coeff_slice[tuple(coords.tolist())] * np.product(np.power(pos, coords))
+
+        # Place our float into the poly_vector
+        poly_vector[deg] = extracted_coeff
+
+    return poly_vector
+
 
 def oneDderivative(coeffs: np.ndarray):
     output_coeffs = np.zeros(len(coeffs) - 1)
@@ -281,23 +349,24 @@ def test():
 
     A = np.array([[2, 0, 2], [1, 2, 3], [1, 1, 1]])
 
-    cpp.print_array(A)
+    # cpp.print_array(A)
 
-    print(A)
-    print(rref(A))
-    print(cpp.rref(A))
+    # print(A)
+    # print(rref(A))
+    # print(cpp.rref(A))
 
     print("Comparing 2D polynomial fitting to nD polynomial fitting")
 
+    ps_one = [[0, 4], [1, -1], [2, 0]]
     ps = [[0, 0, 4], [1, 0, -1], [2, 0, 0], [0, 2, 0],  [0, 1, -1], [1, 1, 1], [1, 2, 3], [2, 1, 3], [2, 2, 4]]
 
     twoD = twoDpolyFit(ps, 2, 2)
     nD = nDpolyFit(ps, 2, 2)
     cpp_twoD = cpp.twoDpolyFit(ps, 2, 2)
 
-    print("2D: {}".format(twoD))
-    print("nD: {}".format(nD))
-    print("cpp: {}".format(cpp_twoD))
+    # print("2D: {}".format(twoD))
+    # print("nD: {}".format(nD))
+    # print("cpp: {}".format(cpp_twoD))
 
 
     print("Coeffs Match:", np.allclose(twoD, nD))
@@ -311,18 +380,51 @@ def test():
     nD_three = nDpolyFit(ps_three, 2, 2, 2)
     cpp_threeD = cpp.threeDpolyFit(ps_three, 2, 2, 2)
 
-    print("Coeffs Match:", np.allclose(nD_three, cpp_threeD))
+    print("Three D Coeffs Match:", np.allclose(nD_three, cpp_threeD))
 
 
-    # fail = False
-    # fail_two = False
-    # for x, y, z in ps:
-    #     fail = fail or twoDpolyEval(twoD, x, y) != nDpolyEval(nD, x, y)
-    #     # fail_two = fail_two or twoDpolyEval(twoD, x, y) != cpp.twoDpolyEval(cpp_twoD, x, y)
+    print("Checking Poly Eval Funcs")
+    oneD = nDpolyFit(ps_one, 2)
+
+    fail_one = False
+    for x, y in ps_one:
+        fail_one = fail_one or oneDpolyEval(oneD, x) != nDpolyEval(oneD, x)
+
+    fail = False
+    fail_two = False
+    for x, y, z in ps:
+        fail = fail or twoDpolyEval(twoD, x, y) != nDpolyEval(nD, x, y)
+        # fail_two = fail_two or twoDpolyEval(twoD, x, y) != cpp.twoDpolyEval(cpp_twoD, x, y)
+
+    fail_three = False
+
+    for x, y, z, _ in ps_three:
+        fail_three = fail_three or threeDpolyEval(cpp_threeD, x, y, z) != nDpolyEval(nD_three, x, y, z)
+
+    print("1d & nD Eval Match:", not fail_one)
+    print("2d & nD Eval Match:", not fail)
+    print("3d & nD Eval Match:", not fail_three)
+
+    print("\nTesting nDpolyExtract")
+
+    tdps = np.array([[0, 0, 0], [10, 0, 1], [10, 10, 0], [0, 10, 1], [5, 0, -2], [5, 5, -3], [0, 5, -2], [10, 5, -1], [5, 10, -1]])
+    tdcs = twoDpolyFit(tdps, 2, 2)
+
+
+    y_pos = 1.5
+    along_x = nDpolyExtract(tdcs, 0, 1.5)
+    fail = False
+
+    for x in np.linspace(0, 10, 20):
+        # print("({}, {})".format(x, 1.5))
+        # print(abs(oneDpolyEval(along_x, x) - twoDpolyEval(tdcs, x, y_pos)))
+
+        fail = fail or abs(oneDpolyEval(along_x, x) - twoDpolyEval(tdcs, x, y_pos)) > 1e-14
+
+    print("Extract Match:", not fail)
 
 
     # print("Eval Match:", not fail)
-    # # print("Eval Match:", not fail)
 
 
     # print("Testing 1d case")
