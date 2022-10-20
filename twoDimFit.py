@@ -256,6 +256,24 @@ def nDpolyExtract(coeffs: np.ndarray, ind_to_extract: int, *pos):
 
     return poly_vector
 
+def oneDpolyNewtonRaphson(coeffs: np.ndarray, target: float, x0:float, maxIter: int = 50, tol: float = 1e-6):
+    x = x0
+    discrep = 1e10
+    itr = 0
+
+    slope_coeffs = oneDderivative(coeffs)
+
+    # Func = oneDpolyEval(coeffs, x) - target
+    # Slope = oneDpolyEval(slope_coeffs, x)
+
+    while discrep > tol and itr < maxIter:
+        x -= (oneDpolyEval(coeffs, x) - target) / oneDpolyEval(slope_coeffs, x)
+
+        discrep = oneDpolyEval(coeffs, x) - target
+        itr += 1
+
+    return x
+
 
 def oneDderivative(coeffs: np.ndarray):
     output_coeffs = np.zeros(len(coeffs) - 1)
