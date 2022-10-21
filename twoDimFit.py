@@ -258,7 +258,7 @@ def nDpolyExtract(coeffs: np.ndarray, ind_to_extract: int, *pos):
 
 def oneDpolyNewtonRaphson(coeffs: np.ndarray, target: float, x0:float, maxIter: int = 50, tol: float = 1e-6):
     x = x0
-    discrep = 1e10
+    discrep = oneDpolyEval(coeffs, x) - target
     itr = 0
 
     slope_coeffs = oneDderivative(coeffs)
@@ -266,10 +266,14 @@ def oneDpolyNewtonRaphson(coeffs: np.ndarray, target: float, x0:float, maxIter: 
     # Func = oneDpolyEval(coeffs, x) - target
     # Slope = oneDpolyEval(slope_coeffs, x)
 
-    while discrep > tol and itr < maxIter:
-        x -= (oneDpolyEval(coeffs, x) - target) / oneDpolyEval(slope_coeffs, x)
+    while abs(discrep) > tol and itr < maxIter:
+        slope = oneDpolyEval(slope_coeffs, x)
+        x -= discrep / slope
 
         discrep = oneDpolyEval(coeffs, x) - target
+        # print("{} {:.3f}: delt {:.3e}".format(itr, x, discrep))
+        # print(abs(discrep) > tol)
+
         itr += 1
 
     return x
@@ -278,7 +282,7 @@ def oneDpolyNewtonRaphson(coeffs: np.ndarray, target: float, x0:float, maxIter: 
 def oneDderivative(coeffs: np.ndarray):
     output_coeffs = np.zeros(len(coeffs) - 1)
 
-    for ind, coeff in enumerate(coeffs[1:]):
+    for ind, coeff in enumerate(coeffs[1:], 1):
         output_coeffs[ind-1] = ind * coeff
 
     return output_coeffs
@@ -440,6 +444,14 @@ def test():
         fail = fail or abs(oneDpolyEval(along_x, x) - twoDpolyEval(tdcs, x, y_pos)) > 1e-14
 
     print("Extract Match:", not fail)
+
+    cubic = np.array([0, -1, 0, 1])
+
+    print("Cubic Eval:", oneDpolyEval(cubic, 1))
+
+    x = oneDpolyNewtonRaphson(cubic, 1, 0)
+    print("X=", x)
+    print("y(x_inv)", oneDpolyEval(cubic, x))
 
 
     # print("Eval Match:", not fail)
