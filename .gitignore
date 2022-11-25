@@ -1,3 +1,6 @@
 .DS_Store
 __pycache__
-
+*.so
+*.rendered.*
+*.pyd
+.rendered*
