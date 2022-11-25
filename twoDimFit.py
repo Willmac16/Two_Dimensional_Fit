@@ -30,7 +30,7 @@ def invert(m):
     if len(shape) != 2 or shape[0] != shape[1]:
         raise ValueError("Matrix must be square")
 
-    aug = np.zeros((shape[0], 2*shape[1]))
+    aug = np.zeros((shape[0], 2*shape[1]), dtype=object)
 
     aug[:,:shape[1]] = m
     aug[:,shape[1]:] = np.identity(shape[0])
