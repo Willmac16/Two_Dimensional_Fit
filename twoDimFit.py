@@ -351,7 +351,7 @@ class PiecewisePolyfit:
             while ind + 1 < len(self.split_points) and x < self.split_points[ind]:
                 ind += 1
 
-        print("Binary Search Check: {}".format("passed" if bin_ind == ind else "failed"))
+        # print("Binary Search Check: {}".format("passed" if bin_ind == ind else "failed"))
 
         segment = ind
 

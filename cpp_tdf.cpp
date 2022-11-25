@@ -3,6 +3,8 @@
 #include <pybind11/numpy.h>
 #include <iostream>
 
+#define DEBUG
+
 namespace py = pybind11;
 
 py::array_t<double> rref_py(py::array_t<double> mat)
@@ -244,9 +246,9 @@ double sigma(py::array_t<double> points, int x_deg, int y_deg, int z_deg)
         sum += pow(ptr[ind * point_deg + 0], x_deg) * pow(ptr[ind * point_deg + 1], y_deg) * pow(ptr[ind * point_deg + 2], z_deg);
     }
 
-    #ifdef DEBUG
-    std::cout << "(" << x_deg << "," << y_deg << "," << z_deg << ") = " << sum << std::endl;
-    #endif
+    // #ifdef DEBUG
+    //     std::cout << "(" << x_deg << "," << y_deg << "," << z_deg << ") = " << sum << std::endl;
+    // #endif
 
     return sum;
 }
