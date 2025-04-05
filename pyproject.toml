@@ -1,0 +1,27 @@
+[project]
+name = "two-dimensional-fit"
+version = "0.0.1"
+authors = [
+  { name="Will MacCormack", email="me@willmac.xyz" },
+]
+description = "Multidimensional Polynomial Fitting"
+readme = "README.md"
+requires-python = ">=3.1"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+dependencies = [
+  "numpy",
+]
+
+[project.urls]
+Homepage = "https://github.com/Willmac16/Two_Dimensional_Fit"
+Issues = "https://github.com/Willmac16/Two_Dimensional_Fit/issues"
+
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
