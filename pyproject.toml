@@ -1,5 +1,5 @@
 [project]
-name = "two-dimensional-fit"
+name = "two_dimensional_fit"
 version = "0.0.1"
 authors = [
   { name="Will MacCormack", email="me@willmac.xyz" },
