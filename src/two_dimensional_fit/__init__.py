@@ -5,14 +5,14 @@ def rref(m):
     matrix = np.copy(m)
     # Current Row
     row = 0
-    for col in range(len(matrix)):
+    for col in range(matrix.shape[1]):
         lead = False
 
         # Sweep for a row that has an el in this col
-        for ind in range(row, len(matrix)):
+        for ind in range(row, matrix.shape[0]):
             if not(lead) and matrix[ind, col] != 0:
-
                 lead = True
+
                 # Normalize new row
                 matrix[ind] = matrix[ind] / matrix[ind, col]
 
@@ -24,9 +24,9 @@ def rref(m):
 
         # Remove this row from all the other rows
         if lead:
-            for ind in range(len(matrix)):
+            for ind in range(matrix.shape[0]):
                 if ind != row:
-                    matrix[ind] -= matrix[ind, col] * matrix[col]
+                    matrix[ind] -= matrix[ind, col] * matrix[row]
 
             row += 1
         # Otherwise move on to the next column; still looking for our row leader
