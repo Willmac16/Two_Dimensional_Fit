@@ -52,13 +52,13 @@ def invert(m):
 
 # linear system solution function (sets free variables to 0)
 def solve(A, Y):
-    aug = np.append(A, Y.reshape((Y.shape[0], 1)), axis=1)
+    aug = np.c_[A, Y]
 
     # print(aug)
     clean = rref(aug)
     # print(clean)
 
-    coeffs = np.zeros(len(aug[0])-1)
+    coeffs = np.zeros(aug.shape[1]-1)
 
     for row in clean:
         leadingOne = -1
