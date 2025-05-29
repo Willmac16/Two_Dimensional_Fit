@@ -3,24 +3,33 @@ import numpy as np
 # simple rref algorithm
 def rref(m):
     matrix = np.copy(m)
-    for rc in range(len(matrix)):
+    # Current Row
+    row = 0
+    for col in range(len(matrix)):
         lead = False
 
-        for ind in range(rc, len(matrix)):
-            if not(lead) and matrix[ind,rc] != 0:
+        # Sweep for a row that has an el in this col
+        for ind in range(row, len(matrix)):
+            if not(lead) and matrix[ind, col] != 0:
 
                 lead = True
-                matrix[ind] = matrix[ind] / matrix[ind,rc]
+                # Normalize new row
+                matrix[ind] = matrix[ind] / matrix[ind, col]
 
-                temp = np.copy(matrix[rc])
-
-                matrix[rc] = matrix[ind]
-
+                # Swap row w/ corresponding ind
+                temp = np.copy(matrix[row])
+                matrix[row] = matrix[ind]
                 matrix[ind] = temp
-        if (lead):
+
+
+        # Remove this row from all the other rows
+        if lead:
             for ind in range(len(matrix)):
-                if ind != rc:
-                    matrix[ind] -= (matrix[ind,rc]*matrix[rc])
+                if ind != row:
+                    matrix[ind] -= matrix[ind, col] * matrix[col]
+
+            row += 1
+        # Otherwise move on to the next column; still looking for our row leader
 
     return matrix
 
