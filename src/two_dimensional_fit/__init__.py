@@ -51,8 +51,8 @@ def invert(m):
 
 
 # linear system solution function (sets free variables to 0)
-def solve(A, Y):
-    aug = np.c_[A, Y]
+def solve(A, y):
+    aug = np.c_[A, y]
 
     # print(aug)
     clean = rref(aug)
@@ -73,6 +73,110 @@ def solve(A, Y):
                 ind += 1
 
     return coeffs
+
+def renormalize(A, row_ind, new_leader):
+  row = A[row_ind]
+
+  # Re-Normalize Row
+  row /= row[new_leader]
+
+  # Remove new leader from all other rows
+  column_to_fix = A[:, new_leader].copy()
+  column_to_fix[row_ind] = 0
+
+  A -= column_to_fix.reshape(-1, 1) * row
+
+# non-neg linear system solution function (sets free variables to 0)
+# Allow
+def pos_solve(aug):
+    aug.dtype = float
+
+    clean = rref(aug)
+
+    # Non-Negative Pass
+    for row_ind in range(clean.shape[0]):
+      row = clean[row_ind]
+
+      sys = row[:-1]
+      res = row[-1]
+
+      if res >= 0:
+        # Get the leading 1
+        if np.any(np.nonzero(sys == 1.0)):
+          leader = np.nonzero(sys == 1.0)[0][0]
+          assert leader is not None
+      else:
+        # Looking for the leading negative: need to renorm
+        non_zeros = np.nonzero(sys < 0.0)[0]
+
+        if len(non_zeros) == 0:
+          print()
+          print(f"No Leading negative found in: {row_ind}")
+          print(row)
+        else:
+          negative_leader = non_zeros[0]
+          renormalize(clean, row_ind, negative_leader)
+
+    if not np.all(clean[:, -1] >= 0):
+      print(clean)
+    assert np.all(clean[:, -1] >= 0)
+
+    specific = np.zeros(aug.shape[1]-1)
+
+    # Second Pass: Specific Solutions
+    for row_ind in range(aug.shape[0]):
+      row = clean[row_ind]
+
+      sys = row[:-1]
+      res = row[-1]
+
+      assert res>= 0, f"{res} < 0"
+
+      # Get the leading 1; no longer Cannonical RREF (enforce +)
+      if np.any(np.nonzero(sys > 0.0)):
+        non_zeros = np.nonzero(sys > 0.0)[0]
+        if (len(non_zeros) == 0):
+          print(sys)
+
+        # assert len(non_zeros) != 0
+        leader = non_zeros[0]
+
+        specific[leader] = res
+
+    assert np.all(specific >= 0)
+
+    assert np.allclose(aug[:, :-1] @ specific, aug[:, -1])
+
+    return specific
+
+# Solves bounded linear equations where params are non-negative & have an upper bound
+def bound_solve(A, y, bounds=(None,)):
+  clamp_count = sum([b is not None for b in bounds])
+
+  y_eqn = np.c_[A, np.zeros((A.shape[0], clamp_count)), y]
+
+  clamp_eqns = np.zeros((clamp_count, y_eqn.shape[1]))
+
+  clamp_ind = 0
+  for ind, bound in enumerate(bounds):
+    if bound is not None:
+      clamp_vec = clamp_eqns[clamp_ind]
+
+      clamp_vec[ind] = 1
+      clamp_vec[A.shape[1] + clamp_ind] = 1
+      clamp_vec[-1] = bound
+
+      clamp_ind += 1
+
+  sol = pos_solve(np.r_[y_eqn, clamp_eqns])
+
+
+  particulars = sol[:-clamp_count]
+  slacks = sol[-clamp_count:]
+
+  assert np.all(slacks >= 0)
+
+  return particulars
 
 def sigma(ps, cs, zDeg=0):
     sum = 0
