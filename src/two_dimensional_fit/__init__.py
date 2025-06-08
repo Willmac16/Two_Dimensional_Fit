@@ -88,6 +88,7 @@ def renormalize(A, row_ind, new_leader):
 
 # non-neg linear system solution function (sets free variables to 0)
 # Allow
+# TODO: Move the RREF inline and do 2 passes total (not rref + 2 in here)
 def pos_solve(aug):
     clean = rref(aug)
 
@@ -111,13 +112,15 @@ def pos_solve(aug):
         if len(non_zeros) == 0:
           print()
           print(f"No Leading negative found in: {row_ind}")
-          print(row)
+          print(sys)
         assert len(non_zeros) != 0
 
         negative_leader = non_zeros[0]
         renormalize(clean, row_ind, negative_leader)
 
     if not np.all(clean[:, -1] >= 0):
+      print()
+      print("non-positive residual after first pass:")
       print(clean)
     assert np.all(clean[:, -1] >= 0)
 
