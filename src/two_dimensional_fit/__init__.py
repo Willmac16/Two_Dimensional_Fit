@@ -2,7 +2,7 @@ import numpy as np
 
 # simple rref algorithm
 def rref(m):
-    matrix = np.copy(m)
+    matrix = np.copy(m).astype(float)
     # Current Row
     row = 0
     for col in range(matrix.shape[1]):
@@ -89,8 +89,6 @@ def renormalize(A, row_ind, new_leader):
 # non-neg linear system solution function (sets free variables to 0)
 # Allow
 def pos_solve(aug):
-    aug.dtype = float
-
     clean = rref(aug)
 
     # Non-Negative Pass
@@ -109,13 +107,15 @@ def pos_solve(aug):
         # Looking for the leading negative: need to renorm
         non_zeros = np.nonzero(sys < 0.0)[0]
 
+        # Assert w/ multiline print
         if len(non_zeros) == 0:
           print()
           print(f"No Leading negative found in: {row_ind}")
           print(row)
-        else:
-          negative_leader = non_zeros[0]
-          renormalize(clean, row_ind, negative_leader)
+        assert len(non_zeros) != 0
+
+        negative_leader = non_zeros[0]
+        renormalize(clean, row_ind, negative_leader)
 
     if not np.all(clean[:, -1] >= 0):
       print(clean)
@@ -133,19 +133,19 @@ def pos_solve(aug):
       assert res>= 0, f"{res} < 0"
 
       # Get the leading 1; no longer Cannonical RREF (enforce +)
-      if np.any(np.nonzero(sys > 0.0)):
+      if np.any(sys > 0.0):
         non_zeros = np.nonzero(sys > 0.0)[0]
         if (len(non_zeros) == 0):
           print(sys)
 
-        # assert len(non_zeros) != 0
+        assert len(non_zeros) != 0
         leader = non_zeros[0]
 
         specific[leader] = res
 
     assert np.all(specific >= 0)
 
-    assert np.allclose(aug[:, :-1] @ specific, aug[:, -1])
+    assert np.allclose(aug[:, :-1] @ specific, aug[:, -1]), f"{aug[:, :-1]} @ {specific} != {aug[:, -1]}"
 
     return specific
 
