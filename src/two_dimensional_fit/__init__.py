@@ -133,8 +133,8 @@ def pos_solve(aug):
       assert res>= 0, f"{res} < 0"
 
       # Get the leading 1; no longer Cannonical RREF (enforce +)
-      if np.any(sys > 0.0):
-        non_zeros = np.nonzero(sys > 0.0)[0]
+      if np.any(sys == 1.0):
+        non_zeros = np.nonzero(sys == 1.0)[0]
         if (len(non_zeros) == 0):
           print(sys)
 
